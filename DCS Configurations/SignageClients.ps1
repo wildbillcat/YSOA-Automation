@@ -20,25 +20,6 @@
          DestinationPath = "C:\Users\signage\AppData\Local\Xibo\XiboClient.exe_Url_zclrehyrcix2bbdpnuvq15j31b1kejhn\2.0.0.0\user.config" # The path where the user config file should be installed
       }
    }
-   Node "ARCH-SIGNAGE-02"
-   {
-      # This Copys the Config File over to the Machine
-      File XiboConfigurationFile
-      {
-         Checksum = "ModifiedDate" #Ensure Config File is Latest Revision
-         Ensure = "Present"  # Ensure Config File Exists"
-         SourcePath = "\\arch-cfgmgr\PowershellDCSResources\Signage\ARCH-SIGNAGE-02.config" # This is a path of the Updated Config File
-         DestinationPath = "C:\Program Files (x86)\Xibo Player\XiboClient.exe.config" # The path where the config file should be installed
-      }
-      # This Copys the Config File over to the Machine
-      File XiboUserConfigurationFile
-      {
-         Checksum = "ModifiedDate" #Ensure Config File is Latest Revision
-         Ensure = "Present"  # Ensure Config File Exists"
-         SourcePath = "\\arch-cfgmgr\PowershellDCSResources\Signage\ARCH-SIGNAGE-02.user.config" # This is a path of the Updated Config File
-         DestinationPath = "C:\Users\signage\AppData\Local\Xibo\XiboClient.exe_Url_zclrehyrcix2bbdpnuvq15j31b1kejhn\2.0.0.0\user.config" # The path where the user config file should be installed
-      }
-   }
    Node "ARCH-SIGNAGE-03"
    {
       # This Copys the Config File over to the Machine
@@ -439,23 +420,5 @@
          DestinationPath = "C:\Users\signage\AppData\Local\Xibo\XiboClient.exe_Url_zclrehyrcix2bbdpnuvq15j31b1kejhn\2.0.0.0\user.config" # The path where the user config file should be installed
       }
    }
-   Node "ARCH-SIGNAGE-24"
-   {
-      # This Copys the Config File over to the Machine
-      File XiboConfigurationFile
-      {
-         Checksum = "ModifiedDate" #Ensure Config File is Latest Revision
-         Ensure = "Present"  # Ensure Config File Exists"
-         SourcePath = "\\arch-cfgmgr\PowershellDCSResources\Signage\ARCH-SIGNAGE-24.config" # This is a path of the Updated Config File
-         DestinationPath = "C:\Program Files (x86)\Xibo Player\XiboClient.exe.config" # The path where the config file should be installed
-      }
-      # This Copys the Config File over to the Machine
-      File XiboUserConfigurationFile
-      {
-         Checksum = "ModifiedDate" #Ensure Config File is Latest Revision
-         Ensure = "Present"  # Ensure Config File Exists"
-         SourcePath = "\\arch-cfgmgr\PowershellDCSResources\Signage\ARCH-SIGNAGE-24.user.config" # This is a path of the Updated Config File
-         DestinationPath = "C:\Users\signage\AppData\Local\Xibo\XiboClient.exe_Url_zclrehyrcix2bbdpnuvq15j31b1kejhn\2.0.0.0\user.config" # The path where the user config file should be installed
-      }
-   }
 } 
+SignageClients #This allows the script to be run and generate the MOF files.
