@@ -1,4 +1,18 @@
-﻿param(
+﻿<#
+.Synopsis
+   This Configures a Computer to be used as a PaperCut Release Station with the designated configuration
+.DESCRIPTION
+   This is a script that installs the papercut release station software, configures the computer with required 
+   customizations, moves the computer in the active directory, and gpupdates it. The computer should be restarted
+   manually after the DSC is applied.
+.EXAMPLE
+   .\ReleaseStationClients.ps1 -MachineName Arch-PC-623 -Configuration PlottingPit6
+   Start-DscConfiguration .\ReleaseStationsClients -ComputerName Arch-PC-623 -Verbose -Wait
+.LINK
+    mailto:patrick.mcmorran@yale.edu
+#>
+
+param(
    $MachineName,
    $Configuration
    )
