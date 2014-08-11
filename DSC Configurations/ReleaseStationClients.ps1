@@ -1,16 +1,25 @@
-﻿Configuration ReleaseStationsClients
+﻿param(
+   $MachineName,
+   $Configuration
+   )
+
+Configuration ReleaseStationsClients
 {
    param(
    $MachineName,
    $Configuration
    )
+
+   $UserName = "ReleaseStationUser" #This is the username stored in the GPO for Signage Machine
+   $Password = "!MY573RyP@55w0rd" | ConvertTo-SecureString -asPlainText -Force
+
    # This Configuration block contains a configuration for the 4th Floor Plotting Pit
    Node $MachineName 
    {
       User AddSignageUser #Adds the Signage User that will AutoLogin with the GPO
         {
-            UserName = "ReleaseStationUser"
-            Password = "!MY573RyP@55w0rd"
+            UserName = $UserName
+            Password = New-Object System.Management.Automation.PSCredential ($UserName, $Password)
             Ensure = "Present"
             PasswordChangeNotAllowed = $true
             PasswordChangeRequired = $false
@@ -63,8 +72,8 @@
         {
             Checksum = "ModifiedDate" #Ensure Config File is Latest Revision
             Ensure = "Present"  # Ensure Config File Exists"
-            SourcePath = "\\arch-cfgmgr\PowershellDCSResources\ReleaseStation\2ReleaseStation" # This is a path of the Updated Config File
-            DestinationPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\2ReleaseStation" # The path where the config file should be installed
+            SourcePath = "\\arch-cfgmgr\PowershellDCSResources\ReleaseStation\2ReleaseStation.lnk" # This is a path of the Updated Config File
+            DestinationPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\2ReleaseStation.lnk" # The path where the config file should be installed
             DependsOn = "[File]InstallReleaseStation" #Don't Copy the Configuration until the Release Station is installed
         }
 
@@ -77,7 +86,27 @@
             DestinationPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\3KillExplorer.bat" # The path where the config file should be installed
             DependsOn = "[File]InstallReleaseStation" #Don't Copy the Configuration until the Release Station is installed
         }
+
+      Script MoveInAD
+        {
+        SetScript = { 
+        Move-ADObject -Identity (Get-ADComputer $MachineName).objectguid -TargetPath "OU=ReleaseStations,OU=Infrastructure,OU=Architecture,OU=Architecture,DC=yu,DC=yale,DC=edu"
+        gpupdate /force
+        }
+        TestScript = { (Get-ADComputer $MachineName).DistinguishedName -eq "CN=$MachineName,OU=ReleaseStations,OU=Infrastructure,OU=Architecture,OU=Architecture,DC=yu,DC=yale,DC=edu" }
+        GetScript = { <# This must return a hash table #> }          
+    }
    }
-}    
-ReleaseStationsClients 
-#-MachineName Arch-PC-175,Arch-PC-219,Arch-PC-292,Arch-PC-43,Arch-PC-20,Arch-PC-19,Arch-PC-231,Arch-PC-245,Arch-PC-218 
+}
+
+$ConfigurationData = @{  
+    AllNodes = @(        
+        @{    
+            NodeName = $MachineName;                            
+            PSDscAllowPlainTextPassword = $true;
+         }
+    )  
+}
+
+  
+ReleaseStationsClients -MachineName $MachineName -Configuration $Configuration -configurationData $ConfigurationData
