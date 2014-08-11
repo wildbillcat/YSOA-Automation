@@ -1,5 +1,30 @@
-﻿Configuration SignageClients
+﻿#REQUIRES -Version 4.0
+<#
+.Synopsis
+   This Configures a Computer to be used as a Signage PC with the designated configuration
+.DESCRIPTION
+   This is a script that installs the Xibo Signage software, Flash, configures the computer with required 
+   customizations, moves the computer in the active directory, and gpupdates it. The computer should be restarted
+   manually after the DSC is applied.
+.EXAMPLE
+   .\SignageClients.ps1 -MachineName ARCH-SIGNAGE-03 -Configuration ARCH-SIGNAGE-03
+   Start-DscConfiguration .\ReleaseStationsClients -ComputerName Arch-PC-623 -Verbose -Wait
+.LINK
+    mailto:patrick.mcmorran@yale.edu
+#>
+
+param(
+   $MachineName,
+   $Configuration
+   )
+
+Configuration SignageClients
 {
+    param(
+    $MachineName,
+    $Configuration
+    )
+
    # This Configuration block contains a configuration Node for each Signage Client
    Node "ARCH-SIGNAGE-01"
    {
@@ -420,5 +445,17 @@
          DestinationPath = "C:\Users\signage\AppData\Local\Xibo\XiboClient.exe_Url_zclrehyrcix2bbdpnuvq15j31b1kejhn\2.0.0.0\user.config" # The path where the user config file should be installed
       }
    }
-} 
-SignageClients #This allows the script to be run and generate the MOF files.
+}
+
+$ConfigurationData = @{  
+    AllNodes = @(        
+        @{    
+            NodeName = $MachineName;                            
+            PSDscAllowPlainTextPassword = $true;
+         }
+    )  
+}
+
+Move-ADObject -Identity (Get-ADComputer $MachineName).objectguid -TargetPath "OU=ReleaseStations,OU=Infrastructure,OU=Architecture,OU=Architecture,DC=yu,DC=yale,DC=edu"
+ 
+SignageClients -MachineName $MachineName -Configuration $Configuration -configurationData $ConfigurationData #This allows the script to be run and generate the MOF files.
