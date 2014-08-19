@@ -32,7 +32,7 @@ Configuration ReleaseStationsClients
    # This Configuration block contains a configuration for the 4th Floor Plotting Pit
    Node $MachineName 
    {
-      User AddSignageUser #Adds the Signage User that will AutoLogin with the GPO
+      User AddReleaseStationUser #Adds the Signage User that will AutoLogin with the GPO
         {
             UserName = $UserName
             Password = New-Object System.Management.Automation.PSCredential ($UserName, $Password)
@@ -49,7 +49,7 @@ Configuration ReleaseStationsClients
             Type = "Directory"
             Recurse = $true # Ensure presence of subdirectories, too
             Force = $true
-            SourcePath = "\\arch-cfgmgr\PowershellDCSResources\ReleaseStation\PCRelease"
+            SourcePath = "$ResourceShare\PCRelease"
             DestinationPath = "C:\Program Files (x86)\ReleaseStation"    
         }
       
@@ -58,7 +58,7 @@ Configuration ReleaseStationsClients
         {
             Checksum = "ModifiedDate" #Ensure Config File is Latest Revision
             Ensure = "Present"  # Ensure Config File Exists"
-            SourcePath = "\\arch-cfgmgr\PowershellDCSResources\ReleaseStation\connection.properties" # This is a path of the Updated Connection Config File
+            SourcePath = "$ResourceShare\connection.properties" # This is a path of the Updated Connection Config File
             DestinationPath = "C:\Program Files (x86)\ReleaseStation\connection.properties" # The path where the config file should be installed
             DependsOn = "[File]InstallReleaseStation" #Don't Copy the Configuration until the Release Station is installed
         }
@@ -68,7 +68,7 @@ Configuration ReleaseStationsClients
         {
             Checksum = "ModifiedDate" #Ensure Config File is Latest Revision
             Ensure = "Present"  # Ensure Config File Exists"
-            SourcePath = "\\arch-cfgmgr\PowershellDCSResources\ReleaseStation\$Configuration.properties" # This is a path of the Updated Config File
+            SourcePath = "$ResourceShare\$Configuration.properties" # This is a path of the Updated Config File
             DestinationPath = "C:\Program Files (x86)\ReleaseStation\config.properties" # The path where the config file should be installed
             DependsOn = "[File]InstallReleaseStation" #Don't Copy the Configuration until the Release Station is installed
         }
@@ -78,7 +78,7 @@ Configuration ReleaseStationsClients
         {
             Checksum = "ModifiedDate" #Ensure File is Latest Revision
             Ensure = "Present"  # Ensure Config File Exists"
-            SourcePath = "\\arch-cfgmgr\PowershellDCSResources\ReleaseStation\1DisableAltTab.exe" # This is a path of the Updated Config File
+            SourcePath = "$ResourceShare\1DisableAltTab.exe" # This is a path of the Updated Config File
             DestinationPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\1DisableAltTab.exe" # The path where the config file should be installed
             DependsOn = "[File]InstallReleaseStation" #Don't Copy the Configuration until the Release Station is installed
         }
@@ -88,7 +88,7 @@ Configuration ReleaseStationsClients
         {
             Checksum = "ModifiedDate" #Ensure File is Latest Revision
             Ensure = "Present"  # Ensure Config File Exists"
-            SourcePath = "\\arch-cfgmgr\PowershellDCSResources\ReleaseStation\2ReleaseStation.lnk" # This is a path of the Updated Config File
+            SourcePath = "$ResourceShare\2ReleaseStation.lnk" # This is a path of the Updated Config File
             DestinationPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\2ReleaseStation.lnk" # The path where the config file should be installed
             DependsOn = "[File]InstallReleaseStation" #Don't Copy the Configuration until the Release Station is installed
         }
@@ -98,7 +98,7 @@ Configuration ReleaseStationsClients
         {
             Checksum = "ModifiedDate" #Ensure File is Latest Revision
             Ensure = "Present"  # Ensure Config File Exists"
-            SourcePath = "\\arch-cfgmgr\PowershellDCSResources\ReleaseStation\3KillExplorer.bat" # This is a path of the Updated Config File
+            SourcePath = "$ResourceShare\3KillExplorer.bat" # This is a path of the Updated Config File
             DestinationPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\3KillExplorer.bat" # The path where the config file should be installed
             DependsOn = "[File]InstallReleaseStation" #Don't Copy the Configuration until the Release Station is installed
         }
@@ -111,7 +111,7 @@ Configuration ReleaseStationsClients
         }
         TestScript = { $false }
         GetScript = { <# This must return a hash table #> }          
-    }
+     }
    }
 }
 
@@ -124,5 +124,5 @@ $ConfigurationData = @{
     )  
 }
 
-Move-ADObject -Identity (Get-ADComputer $MachineName).objectguid -TargetPath "OU=ReleaseStations,OU=Infrastructure,OU=Architecture,OU=Architecture,DC=yu,DC=yale,DC=edu"  
+#Move-ADObject -Identity (Get-ADComputer $MachineName).objectguid -TargetPath "OU=ReleaseStations,OU=Infrastructure,OU=Architecture,OU=Architecture,DC=yu,DC=yale,DC=edu"  
 ReleaseStationsClients -MachineName $MachineName -Configuration $Configuration -configurationData $ConfigurationData
