@@ -6,3 +6,4 @@ $computerList = $computerList + $computerList2
 $computerList2 = .\7thFloorPCs.ps1
 $computerList = $computerList + $computerList2
 $computerList
+Invoke-Command -ComputerName $computerList {gpupdate /force}
