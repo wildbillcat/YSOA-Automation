@@ -12,6 +12,17 @@
      
 #>
 
+param(
+   [Parameter(Mandatory=$FALSE, Position=0, HelpMessage="If this is equals SET then the changes will actually be written to the AD and jobs queued to update the PCs.")] 
+    [string] 
+    $Mode = "unset"
+   )
+
+$SET = $FALSE 
+if("SET" -eq $Mode){
+    $SET = $TRUE
+}
+
 #Read Computer Numbers and build list of unlocked computers 
 $UnlockedList = Get-Content "UnlockedComputers.txt"
 $UnlockedComputers = @();
@@ -26,15 +37,21 @@ foreach($PC in $FourthFloorComputers){
     if ($UnlockedComputers -contains $PC){
     #Do stuff to the PC that Exists on the Unlocked List
     echo "$PC is on the Unlocked list"
-    #Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 4th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+    if($SET){
+        Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 4th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+        }
     }
     else{
     #Do stuff to the PC that does not exist on the Unlocked List
     echo "$PC is not on the Unlocked list"
-    #Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 4th Floor Studio Workstations - No Access,OU=SOA 4th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+    if($SET){
+        Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 4th Floor Studio Workstations - No Access,OU=SOA 4th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+        }
     }
     echo "Queue GPUpdate for $PC"
-    #Invoke-Command -AsJob -ComputerName $PC {gpupdate /force}
+    if($SET){
+        Invoke-Command -AsJob -ComputerName $PC {gpupdate /force}
+        }
 }
 
 #Evaluate 5th Floor Computers
@@ -44,15 +61,21 @@ foreach($PC in $FifthFloorComputers){
     if ($UnlockedComputers -contains $PC){
     #Do stuff to the PC that Exists on the Unlocked List
     echo "$PC is on the Unlocked list"
-    Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 5th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+    if($SET){
+        Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 5th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+        }
     }
     else{
     #Do stuff to the PC that does not exist on the Unlocked List
     echo "$PC is not on the Locked list"
-    #Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 5th Floor Studio Workstations - No Access,OU=SOA 5th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+    if($SET){
+        Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 5th Floor Studio Workstations - No Access,OU=SOA 5th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+        }
     }
     echo "Queue GPUpdate for $PC"
-    #Invoke-Command -AsJob -ComputerName $PC {gpupdate /force}
+    if($SET){
+        Invoke-Command -AsJob -ComputerName $PC {gpupdate /force}
+        }
 }
 
 #Evaluate 6th Floor Computers
@@ -62,15 +85,21 @@ foreach($PC in $SixthFloorComputers){
     if ($UnlockedComputers -contains $PC){
     #Do stuff to the PC that Exists on the Unlocked List
     echo "$PC is on the Unlocked list"
-    #Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 6th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+    if($SET){
+        Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 6th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+        }
     }
     else{
     #Do stuff to the PC that does not exist on the Unlocked List
     echo "$PC is not on the Unlocked list"
-    #Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 6th Floor Studio Workstations - No Access,OU=SOA 6th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+    if($SET){
+        Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 6th Floor Studio Workstations - No Access,OU=SOA 6th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+        }
     }
     echo "Queue GPUpdate for $PC"
-    #Invoke-Command -AsJob -ComputerName $PC {gpupdate /force}
+    if($SET){
+        Invoke-Command -AsJob -ComputerName $PC {gpupdate /force}
+        }
 }
 
 #Evaluate 7th Floor Computers
@@ -80,13 +109,19 @@ foreach($PC in $SeventhFloorComputers){
     if ($UnlockedComputers -contains $PC){
     #Do stuff to the PC that Exists on the Unlocked List
     echo "$PC is on the Unlocked list"
-    #Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 7th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+    if($SET){
+        Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 7th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+        }
     }
     else{
     #Do stuff to the PC that does not exist on the Unlocked List
     echo "$PC is not on the Unlocked list"
-    #Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 7th Floor Studio Workstations - No Access,OU=SOA 7th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+    if($SET){
+        Move-ADObject -Identity (Get-ADComputer $PC).objectguid -TargetPath "OU=SOA 7th Floor Studio Workstations - No Access,OU=SOA 7th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+        }
     }
     echo "Queue GPUpdate for $PC"
-    #Invoke-Command -AsJob -ComputerName $PC {gpupdate /force}
+    if($SET){
+        Invoke-Command -AsJob -ComputerName $PC {gpupdate /force}
+        }
 }

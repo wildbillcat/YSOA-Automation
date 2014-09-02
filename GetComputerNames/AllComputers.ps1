@@ -5,5 +5,6 @@ $computerList2 = .\6thFloorPCs.ps1
 $computerList = $computerList + $computerList2
 $computerList2 = .\7thFloorPCs.ps1
 $computerList = $computerList + $computerList2
-$computerList
-Invoke-Command -ComputerName $computerList {gpupdate /force}
+foreach($PC in $computerList){
+    Invoke-Command -AsJob -ComputerName $PC {gpupdate /force}
+}
