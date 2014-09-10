@@ -54,9 +54,9 @@ Configuration SignageClients
       Package XiboClient
       {
         Ensure = "Present"  # You can also set Ensure to "Absent"
-        Path  = "$ResourceShare\xibo-client-1.6.1-win32-x86.msi"
+        Path  = "$ResourceShare\xibo-client-1.6.3-win32-x86.msi"
         Name = "Xibo Player"
-        ProductId = "068FD5F3-A4CF-4F6B-9EB0-61CB7B31E11E"
+        ProductId = "8A4B377C-D3D9-41A8-A6C5-E5CA9F8B404E"
         DependsOn = "[Package]AdobeFlash"
       } 
       # This Copys the Config File over to the Machine
