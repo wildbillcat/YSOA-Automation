@@ -1,8 +1,8 @@
 ﻿<#
 .Synopsis
-   This fetches the Computer Model from WMI to then be used for comparison
+   This fetches the Computer Serial from WMI, and MAC to then be used for Label Making
 .DESCRIPTION
-   This is a script that finds the local computer's 
+   This is a script that finds the Service Tag and Mac Address for the computers specified, which can later be used for Labels.
 .EXAMPLE
    Set-ComputerOU.ps1 -ComputerName PC1,PC2,PC3 -OUPath "OU=6th Floor Lab,OU=Teaching Labs,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
 .LINK
