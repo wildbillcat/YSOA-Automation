@@ -4,7 +4,7 @@
 .DESCRIPTION
    This is a script that finds the Service Tag and Mac Address for the computers specified, which can later be used for Labels.
 .EXAMPLE
-   Set-ComputerOU.ps1 -ComputerName PC1,PC2,PC3 -OUPath "OU=6th Floor Lab,OU=Teaching Labs,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
+   Set-ComputerOU.ps1 -ComputerName PC1,PC2,PC3
 .LINK
     mailto:patrick.mcmorran@yale.edu
 #>
