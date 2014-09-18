@@ -122,3 +122,32 @@ param (
     $SendBillingSummary
 )
 
+#Load the XML RPC Library 
+$RPCAssemblyPath = Resolve-Path -Path CookComputing.XmlRpcV2.dll
+[Reflection.Assembly]::LoadFile($RPCAssemblyPath)
+
+#Load the PaperCut Library
+$PaperCutAssemblyPath = Resolve-Path -Path PaperCutServer.dll
+[Reflection.Assembly]::LoadFile($PaperCutAssemblyPath)
+
+#Create a Papercut Server Interface
+$PaperCutServer = new-object PaperCutRPC.PaperCutServer($PaperCutServer, $PaperCutAPIKey, $PaperCutPort)
+
+$TotalPaperCutUsers = $PaperCutServer.GetTotalPaperCutUsers()
+
+echo "PaperCutUsers: $TotalPaperCutUsers"
+
+$FetchUsersSuccess = $PaperCutServer.RetrievePapercutUsers()
+
+if($true -eq $FetchUsersSuccess){
+    echo "Feching users was a success"
+}else{
+    echo "Fetching users failed!"
+    break
+}
+
+#Test results by writing out the list of users.
+Echo "List users"
+foreach ($user in $PaperCutServer.GetPapercutUsers()){
+    echo "$user"
+}
