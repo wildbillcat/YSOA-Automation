@@ -1,6 +1,6 @@
 *.mof
 *.txt
-.dll
-.exe
-.csv
-.dat
+*.dll
+*.exe
+*.csv
+*.dat
