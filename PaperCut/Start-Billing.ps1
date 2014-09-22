@@ -169,34 +169,47 @@ $PaperCutUsers = $PaperCutServer.GetPapercutUsers();
 $ActiveDirectoryBillableUsers
 $BillableUsers
 
-if($)
-#Enumerate all the Whitelisted Billable Users
-foreach($UserGroup in $ADWhiteList){
-    $ActiveDirectoryBillableUsers += Get-ADGroupMember $UserGroup -Recursive | select name
+#Filter out Billable Users
+if($ADWhiteList -ne $null){
+    #Enumerate all the Whitelisted Billable Users
+    foreach($UserGroup in $ADWhiteList){
+        $ActiveDirectoryBillableUsers += Get-ADGroupMember $UserGroup -Recursive | select name
+    }
+
+    #Filtering out Users not on Whitelist
+    foreach($User in $ActiveDirectoryBillableUsers){
+        if($PaperCutUsers.Contains($User)){
+            $BillableUsers += $User
+        }
+    }
+    
+    #Clear PaperCut List
+    $PaperCutUsers.Clear()
+    
+    #Clear AD User List
+    $ActiveDirectoryBillableUsers.Clear()
+}else{
+    $BillableUsers = $PaperCutUsers
 }
 
-#Filtering out Users not on Whitelist
-foreach($User in $ActiveDirectoryBillableUsers){
-    if($PaperCutUsers.Contains($User)){
-        $BillableUsers += $User
+
+
+if($ADBlackList -ne $null){
+    #Enumerate all users not to be billed
+    foreach($UserGroup in $ADBlackList){
+        $ActiveDirectoryBillableUsers += Get-ADGroupMember $UserGroup -Recursive | select name
+    }
+
+    #Filtering out Users on BlackList
+    foreach($User in $ActiveDirectoryBillableUsers){
+        if($BillableUsers.Contains($User)){
+            $BillableUsers.Remove($User)
+        }
     }
 }
+#End Filter
 
-#Clear PaperCut List
-$PaperCutUsers.Clear()
-#Clear AD User List
-$ActiveDirectoryBillableUsers.Clear()
 
-#Enumerate all users not to be billed
-foreach($UserGroup in $ADBlackList){
-    $ActiveDirectoryBillableUsers += Get-ADGroupMember $UserGroup -Recursive | select name
-}
 
-#Filtering out Users on BlackList
-foreach($User in $ActiveDirectoryBillableUsers){
-    if($BillableUsers.Contains($User)){
-        $BillableUsers.Remove($User)
-    }
-}
 
 
