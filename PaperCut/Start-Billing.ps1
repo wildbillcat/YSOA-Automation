@@ -133,7 +133,19 @@ param (
 
     [Parameter(Mandatory=$False, Position=28, HelpMessage="Enable or Disable the e-mail summary of Billing")] 
     [string[]] 
-    $ADBlackList
+    $ADBlackList,
+
+    #Student Status Codes of students Valid to Bill
+    #IE: {"EL", "FC", "HT", "LT", "NP"};
+    [Parameter(Mandatory=$True, Position=29, HelpMessage="Enable or Disable the e-mail summary of Billing")] 
+    [string[]] 
+    $SFASValidStatus,
+
+    [Parameter(Mandatory=$False, Position=30, HelpMessage="This is the path to Oracle.ManagedDataAccess.dll of the ODP.NET package installed")] 
+    [string[]] 
+    $OracleManagedDataAssemblyPath
+
+
 )
 
 
@@ -147,9 +159,18 @@ $RPCAssemblyPath = Resolve-Path -Path CookComputing.XmlRpcV2.dll
 $PaperCutAssemblyPath = Resolve-Path -Path PaperCutServer.dll
 [Reflection.Assembly]::LoadFile($PaperCutAssemblyPath)
 
+#Load the Oracle Managed Data Access
+$PaperCutAssemblyPath = Resolve-Path -Path $OracleManagedDataAssemblyPath
+[Reflection.Assembly]::LoadFile($OracleManagedDataAssemblyPath)
+
 #Create a Papercut Server Interface
 $PaperCutServer = new-object PaperCutRPC.PaperCutServer($PaperCutServer, $PaperCutAPIKey, $PaperCutPort)
 
+#Open Connection to Oracle Database
+$OracleServer = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("User Id=hr;Password=hr;Data Source=localhost/XE")
+$OracleServer.open()
+
+#Test Connectivity by retrieving the number of users
 $TotalPaperCutUsers = $PaperCutServer.GetTotalPaperCutUsers()
 
 echo "PaperCutUsers: $TotalPaperCutUsers"
@@ -209,7 +230,14 @@ if($ADBlackList -ne $null){
 }
 #End Filter
 
+#As a precaution, remove any duplicate users that might exist
+$BillableUsers = $BillableUsers | select -uniq
 
+#Retrieve a sublist of users from PaperCut with Account Balances
+$BillingList = $PaperCutServer.RetrievePapercutBalances($BillableUsers);
 
+#Now with the List of Whom to Bill Determine who CAN be billed.
+
+#Determine what the Billing Term Code is:
 
 

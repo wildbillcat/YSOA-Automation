@@ -62,12 +62,28 @@ namespace PaperCutRPC
             return this.papercutUsers;
         }
 
+        //This retrieves a list of Papercut User Balances that are non-zero
         public List<PapercutUser> RetrievePapercutBalances(List<string> userList)
         {
             List<PapercutUser> Users = new List<PapercutUser>();
             foreach (string user in userList)
             {
-                Users.Add(new PapercutUser(user, this.serverProxy.GetUserAccountBalance(user, "")));
+                try
+                {
+                    double Balance = this.serverProxy.GetUserAccountBalance(user, "");
+                    Balance = Math.Round(Balance, 2);
+                    if (Balance != 0) //If user has a balance of more than 0 cents (Charge) or less than 0 Cents (Refund) add them to the list.
+                    {
+                        Users.Add(new PapercutUser(user, Balance));
+                    }
+                    
+                }
+                catch
+                {
+                    //Could not retrieve User Balance
+                    Console.WriteLine("Failed to retrieve Balance of " + user);
+                }
+                
             }
             return Users;
         }
