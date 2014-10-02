@@ -148,7 +148,18 @@ param (
 
 )
 
-
+#Validate Batch Information
+$SFASBatchUserID = $SFASBatchUserID.PadRight(8," ")
+if($SFASBatchDetailCode.Length -ne 8){
+    echo "Invalid Batch User ID (Should be less than 9 Characters)"
+}
+$SFASBatchBillingID = $SFASBatchBillingID.PadLeft(5,"0")
+if($SFASBatchBillingID.Length -ne 5){
+    echo "Invalid Batch Detail Code (Should be less than 6 Characters)"
+}
+if($SFASBatchDetailCode.Length -ne 4){
+    echo "Invalid Batch Detail Code (Should be 4 Characters)"
+}
 #Test to make sure Billing ID is valid:$SFASBatchBillingID
 
 #Load the XML RPC Library 
@@ -167,20 +178,32 @@ $PaperCutAssemblyPath = Resolve-Path -Path $OracleManagedDataAssemblyPath
 $PaperCutServer = new-object PaperCutRPC.PaperCutServer($PaperCutServer, $PaperCutAPIKey, $PaperCutPort)
 
 #Open Connection to Oracle Database
-$OracleServer = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("User Id=hr;Password=hr;Data Source=localhost/XE")
-$OracleServer.open()
+$OracleServer = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("User Id=$BannerOracleUser;Password=$BannerOraclePassword;Data Source=$BannerOracleDatabase")
+try{
+    $OracleServer.open()
+    echo "Connection to Oracle Established"
+}catch{
+    echo "Failed to open connection to Oracle Server!"
+    break
+}
+
 
 #Test Connectivity by retrieving the number of users
-$TotalPaperCutUsers = $PaperCutServer.GetTotalPaperCutUsers()
+try{
+    $TotalPaperCutUsers = $PaperCutServer.GetTotalPaperCutUsers()
+    echo "PaperCutUsers: $TotalPaperCutUsers"
+}catch{
+    echo "Failed to open connection to PaperCut Server!"
+    break
+}
 
-echo "PaperCutUsers: $TotalPaperCutUsers"
 
 $FetchUsersSuccess = $PaperCutServer.RetrievePapercutUsers()
 
 if($true -eq $FetchUsersSuccess){
-    echo "Feching users was a success"
+    echo "Feching users from PaperCut was a success"
 }else{
-    echo "Fetching users failed!"
+    echo "Fetching users from PaperCut failed!"
     break
 }
 
@@ -239,5 +262,23 @@ $BillingList = $PaperCutServer.RetrievePapercutBalances($BillableUsers);
 #Now with the List of Whom to Bill Determine who CAN be billed.
 
 #Determine what the Billing Term Code is:
+$BillingTermCodeCMD = $OracleServer.CreateCommand()
+$BillingTermCodeCMD.CommandText = "select current_term_code from syvctrm_with_su"
+$BillingTermCodeReader = $BillingTermCodeCMD.ExecuteReader()
+$BillingTermCode
+
+if($BillingTermCodeReader.Read()){
+    #A Term Code was returned!
+    $BillingTermCode = $BillingTermCodeReader.GetString(0)
+}else{
+    #A Term Code was not returned!
+    Echo "A Billing Term Code was not returned!"
+    break
+}
 
 
+foreach($User in $BillableUsers){
+    $BillingTermCodeCMD = $OracleServer.CreateCommand()
+    $BillingTermCodeCMD.CommandText = "select current_term_code from syvctrm_with_su"
+    $BillingTermCodeReader = $BillingTermCodeCMD.ExecuteReader()
+}

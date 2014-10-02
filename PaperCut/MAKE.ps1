@@ -30,6 +30,12 @@ if($false -eq (Test-Path PaperCutServer.cs)){
     break
 }
 
+if($false -eq (Test-Path SFASUser.cs)){
+    echo "Please ensure the SFASUser.cs is in the folder with this script"
+    echo "Located: YSOA-Automation\PaperCut\SFASUser.cs"
+    break
+}
+
 $compiler = $null
 
 if($true -eq (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe")){
@@ -45,6 +51,8 @@ if($true -eq (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe")
 #Seems all the resources are available, build a library.
 "Compiling "
 & $compiler /target:library /reference:CookComputing.XmlRpcV2.dll PaperCutServer.cs ServerCommandProxy.cs
+
+& $compiler /target:library SFASUser.cs
 
 if($true -eq (Test-Path "PaperCutServer.dll")){
     echo "Successfully compiled the Papercut Server Interface Library PaperCutServer.dll"
