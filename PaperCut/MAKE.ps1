@@ -49,13 +49,20 @@ if($true -eq (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe")
 
 
 #Seems all the resources are available, build a library.
-"Compiling "
+"Compiling Papercut Interface Library"
 & $compiler /target:library /reference:CookComputing.XmlRpcV2.dll PaperCutServer.cs ServerCommandProxy.cs
-
-& $compiler /target:library SFASUser.cs
 
 if($true -eq (Test-Path "PaperCutServer.dll")){
     echo "Successfully compiled the Papercut Server Interface Library PaperCutServer.dll"
 }else{
     echo "Failed to compile the Papercut Server Interface Library PaperCutServer.dll"
+}
+
+"Compiling Banner Formatting Library"
+& $compiler /target:library SFASUser.cs
+
+if($true -eq (Test-Path "SFASUser.dll")){
+    echo "Successfully compiled the SFAS User Library SFASUser.dll"
+}else{
+    echo "Failed to compile the SFAS User Library SFASUser.dll"
 }

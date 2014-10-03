@@ -170,6 +170,10 @@ $RPCAssemblyPath = Resolve-Path -Path CookComputing.XmlRpcV2.dll
 $PaperCutAssemblyPath = Resolve-Path -Path PaperCutServer.dll
 [Reflection.Assembly]::LoadFile($PaperCutAssemblyPath)
 
+#Load the SFAS User Library
+$SFASUserAssemblyPath = Resolve-Path -Path SFASUser.dll
+[Reflection.Assembly]::LoadFile($SFASUserAssemblyPath)
+
 #Load the Oracle Managed Data Access
 $PaperCutAssemblyPath = Resolve-Path -Path $OracleManagedDataAssemblyPath
 [Reflection.Assembly]::LoadFile($OracleManagedDataAssemblyPath)
@@ -277,8 +281,17 @@ if($BillingTermCodeReader.Read()){
 }
 
 
-foreach($User in $BillableUsers){
-    $BillingTermCodeCMD = $OracleServer.CreateCommand()
-    $BillingTermCodeCMD.CommandText = "select current_term_code from syvctrm_with_su"
-    $BillingTermCodeReader = $BillingTermCodeCMD.ExecuteReader()
+foreach($User in $BillingList){
+    $BilledUserCMD = $OracleServer.CreateCommand()
+    $BilledUserCMD.CommandText = "SELECT syvyids_pidm, syvyids_spriden_id, stvests_code, stvests_desc FROM syvyids, sfbetrm, stvests WHERE (syvyids_pidm = sfbetrm_pidm) AND (sfbetrm_term_code = '$BillingTermCode') AND (sfbetrm_ests_code = stvests_code) AND (syvyids_netid = '", NetID, "')"
+    $BilledUserReader = $BillingTermCodeCMD.ExecuteReader()
+    if($BillingTermCodeReader.Read()){
+        #A Term Code was returned!
+        $BillingTermCode = $BilledUserReader.GetString(0)
+    }else{
+        #A Term Code was not returned!
+        Echo "The " + $User.NetID + " was not found in Banner Semster $BillingTermCode"
+        break
+    }
 }
+
