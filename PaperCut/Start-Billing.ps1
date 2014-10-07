@@ -15,7 +15,7 @@ param (
 
     #Papercut Server Variables  
     [Parameter(Mandatory=$TRUE, Position=0, HelpMessage="Enter the URL for the PaperCut Server, ie papercut.website.com")] 
-    [string[]] 
+    [string] 
     $PaperCutServer, 
   
     [Parameter(Mandatory=$TRUE, Position=1, HelpMessage="Enter the API Key or Administrator Password for the PaperCut Server")] 
@@ -179,7 +179,7 @@ $PaperCutAssemblyPath = Resolve-Path -Path $OracleManagedDataAssemblyPath
 [Reflection.Assembly]::LoadFile($OracleManagedDataAssemblyPath)
 
 #Create a Papercut Server Interface
-$PaperCutServer = new-object PaperCutRPC.PaperCutServer($PaperCutServer, $PaperCutAPIKey, $PaperCutPort)
+$PaperCutServer = New-Object PaperCutRPC.PaperCutServer($PaperCutServer, $PaperCutAPIKey, $PaperCutPort)
 
 #Open Connection to Oracle Database
 $OracleServer = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("User Id=$BannerOracleUser;Password=$BannerOraclePassword;Data Source=$BannerOracleDatabase")
@@ -267,8 +267,11 @@ $BillingList = $PaperCutServer.RetrievePapercutBalances($BillableUsers);
 
 #Determine what the Billing Term Code is:
 $BillingTermCodeCMD = $OracleServer.CreateCommand()
+#Query the Database for the Current Term Code
 $BillingTermCodeCMD.CommandText = "select current_term_code from syvctrm_with_su"
+#Create a Reader for the Term Code Code Query
 $BillingTermCodeReader = $BillingTermCodeCMD.ExecuteReader()
+#Create the Billing Term Code to scope it for the script
 $BillingTermCode
 
 if($BillingTermCodeReader.Read()){
@@ -280,18 +283,35 @@ if($BillingTermCodeReader.Read()){
     break
 }
 
+#Variable to hold the array of SFAS Users outside the Scope of the Loop.
+$SFASFinalBillingList
 
 foreach($User in $BillingList){
+    #Fetch User NetID
+    $NetID = $User.NetID
+    #Fetch User Balance
+    $Balance = $User.Balance
+    #Create New Command to find SFAS User Details
     $BilledUserCMD = $OracleServer.CreateCommand()
-    $BilledUserCMD.CommandText = "SELECT syvyids_pidm, syvyids_spriden_id, stvests_code, stvests_desc FROM syvyids, sfbetrm, stvests WHERE (syvyids_pidm = sfbetrm_pidm) AND (sfbetrm_term_code = '$BillingTermCode') AND (sfbetrm_ests_code = stvests_code) AND (syvyids_netid = '", NetID, "')"
-    $BilledUserReader = $BillingTermCodeCMD.ExecuteReader()
+    $BilledUserCMD.CommandText = "SELECT syvyids_pidm, syvyids_spriden_id, stvests_code, stvests_desc FROM syvyids, sfbetrm, stvests WHERE (syvyids_pidm = sfbetrm_pidm) AND (sfbetrm_term_code = '$BillingTermCode') AND (sfbetrm_ests_code = stvests_code) AND (syvyids_netid = '$NetID')"
+    #Create Ready for the Query Results
+    $BilledUserReader = $BilledUserCMD.ExecuteReader()
     if($BillingTermCodeReader.Read()){
         #A Term Code was returned!
-        $BillingTermCode = $BilledUserReader.GetString(0)
+        $PIDM = $BilledUserReader.GetString(0)
+        $SPRIDEN_ID = $BilledUserReader.GetInt(1)
+        $StatusCode = $BilledUserReader.GetString(2)
+        #Test for Valid Status
+        if($SFASValidStatus -ccontains $StatusCode){
+            #Status is Valid, Create SFAS User Object and add them to the List
+            $SFASFinalBillingList += New-Object SFASBilling.SFASUser($NetID, $Balance, $PIDM, $SPRIDEN_ID, $StatusCode)   
+        }else{
+            Echo "The $NetID was an invalid status of: $StatusCode"
+        }
     }else{
         #A Term Code was not returned!
-        Echo "The " + $User.NetID + " was not found in Banner Semster $BillingTermCode"
-        break
+        Echo "The $NetID was not found in Banner Semster: $BillingTermCode"
     }
 }
+
 
