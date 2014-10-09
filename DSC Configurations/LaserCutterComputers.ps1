@@ -28,7 +28,7 @@ Configuration LaserCutterComputers
    {
       #PaperCut Server Package
       #http://www.papercut.com/products/ng/manual/apdx-tools-installer-options.html
-      Package XiboClient
+      Package PapercutClient
       {
         Ensure = "Present"  # You can also set Ensure to "Absent"
         Path  = "$ResourceShare\pcmf-setup-14.2.27858.exe"

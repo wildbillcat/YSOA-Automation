@@ -61,7 +61,7 @@ param (
     [string] 
     $SFTPUser,
 
-    [Parameter(Mandatory=$TRUE, Position=11, HelpMessage="Enter the password for the SFTP User")] 
+    [Parameter(Mandatory=$FALSE, Position=11, HelpMessage="Enter the password for the SFTP User")] 
     [string] 
     $SFTPPassword,
 
@@ -106,11 +106,11 @@ param (
     [string] 
     $SSLEnabled,
 
-    [Parameter(Mandatory=$TRUE, Position=22, HelpMessage="Enter the User ID for the SMTP Server")] 
+    [Parameter(Mandatory=$FALSE, Position=22, HelpMessage="Enter the User ID for the SMTP Server")] 
     [string] 
     $SMTPUser,
 
-    [Parameter(Mandatory=$TRUE, Position=23, HelpMessage="Enter the password for the previous User ID")] 
+    [Parameter(Mandatory=$FALSE, Position=23, HelpMessage="Enter the password for the previous User ID")] 
     [string] 
     $SMTPPassword,
 
@@ -181,12 +181,16 @@ $PaperCutAssemblyPath = Resolve-Path -Path $OracleManagedDataAssemblyPath
 #Create a Papercut Server Interface
 $PaperCutServer = New-Object PaperCutRPC.PaperCutServer($PaperCutServer, $PaperCutAPIKey, $PaperCutPort)
 
+
+$ConString = "User Id=$BannerOracleUser;Password=$BannerOraclePassword;Data Source=$BannerOracleDatabase"
+$ConString
 #Open Connection to Oracle Database
-$OracleServer = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("User Id=$BannerOracleUser;Password=$BannerOraclePassword;Data Source=$BannerOracleDatabase")
-try{
-    $OracleServer.open()
+$OracleServer = New-Object Oracle.ManagedDataAccess.Client.OracleConnection($ConString)
+
+Try{
+    $OracleServer.Open()
     echo "Connection to Oracle Established"
-}catch{
+}Catch{
     echo "Failed to open connection to Oracle Server!"
     break
 }
@@ -214,8 +218,8 @@ if($true -eq $FetchUsersSuccess){
 #Pull Master List of PaperCutUsers
 $PaperCutUsers = $PaperCutServer.GetPapercutUsers();
 
-$ActiveDirectoryBillableUsers
-$BillableUsers
+$ActiveDirectoryBillableUsers = @()
+$BillableUsers = @()
 
 #Filter out Billable Users
 if($ADWhiteList -ne $null){
@@ -284,7 +288,7 @@ if($BillingTermCodeReader.Read()){
 }
 
 #Variable to hold the array of SFAS Users outside the Scope of the Loop.
-$SFASFinalBillingList
+$SFASFinalBillingList = @()
 
 foreach($User in $BillingList){
     #Fetch User NetID
@@ -312,6 +316,29 @@ foreach($User in $BillingList){
         #A Term Code was not returned!
         Echo "The $NetID was not found in Banner Semster: $BillingTermCode"
     }
+}
+
+$AdjustedSFASBillingList = @()
+$AdjustedBillingSum = 0
+#Billing is now calculated. Now edit each PaperCut User's Balance.
+echo "NetID,Account Balance,PIDM,SPRIDEN_ID,Status,Account Absolute" >> "PapercutBilling$SFASBatchBillingID.csv"
+
+foreach($SFASUser in $SFASFinalBillingList){
+    if($PaperCutServer.AdjustUserBalance($SFASUser.NetID,$SFASUser.Balance,"Billing ID: $SFASBatchBillingID") -eq $TRUE){
+        #If the User's papercut account is successfully modified, log it.
+        Echo $SFASUser.NetID","$SFASUser.Balance","$SFASUser.PIDM","$SFASUser.SPRIDEN_ID","$SFASUser.StatusCode","$SFASUser.GetAmount() >> "PapercutBilling$SFASBatchBillingID.csv"
+        $AdjustedSFASBillingList += $SFASUser
+        #The Billing Sum is calculated now since the Header Record of the file has to contain the overall billing amount.
+        $AdjustedBillingSum = $AdjustedBillingSum + $SFASUser.GetAmount()
+    }else{
+        Echo $SFASUser.NetID" has not had their balance adjusted."
+    }
+}
+#Create the Header Record for the Billing Submision
+Echo SFASBilling.SFASUser.GetBatchHeaderRecord($SFASBatchUserID, $SFASBatchBillingID, $AdjustedBillingSum) >>  ($SFASBatchFilePrefix)($SFASBatchBillingID)".dat"
+#This loop creates each detail record per user
+foreach($AdjustedUser in $AdjustedSFASBillingList){
+    Echo $AdjustedUser.GetBatchDetailRecord($SFASBatchUserID, $SFASBatchBillingID, $SFASBatchDetailCode, $BillingTermCode)  >>  ($SFASBatchFilePrefix)($SFASBatchBillingID)".dat"
 }
 
 
