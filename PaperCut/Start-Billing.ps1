@@ -179,7 +179,7 @@ $PaperCutAssemblyPath = Resolve-Path -Path $OracleManagedDataAssemblyPath
 [Reflection.Assembly]::LoadFile($OracleManagedDataAssemblyPath)
 
 #Create a Papercut Server Interface
-$PaperCutServer = New-Object PaperCutRPC.PaperCutServer($PaperCutServer, $PaperCutAPIKey, $PaperCutPort)
+$PaperCutServerConnection = New-Object PaperCutRPC.PaperCutServer($PaperCutServer, $PaperCutAPIKey, $PaperCutPort)
 
 
 $ConString = "User Id=$BannerOracleUser;Password=$BannerOraclePassword;Data Source=$BannerOracleDatabase"
@@ -189,16 +189,15 @@ $OracleServer = New-Object Oracle.ManagedDataAccess.Client.OracleConnection($Con
 
 Try{
     $OracleServer.Open()
-    echo "Connection to Oracle Established"
+    "Connected to database: {0} running on host: {1} - Servicename: {2} - Serverversion: {3}" -f $OracleServer.DatabaseName, $OracleServer.HostName, $OracleServer.ServiceName, $OracleServer.ServerVersion
 }Catch{
     echo "Failed to open connection to Oracle Server!"
     break
 }
 
-
 #Test Connectivity by retrieving the number of users
 try{
-    $TotalPaperCutUsers = $PaperCutServer.GetTotalPaperCutUsers()
+    $TotalPaperCutUsers = $PaperCutServerConnection.GetTotalPaperCutUsers()
     echo "PaperCutUsers: $TotalPaperCutUsers"
 }catch{
     echo "Failed to open connection to PaperCut Server!"
@@ -206,7 +205,7 @@ try{
 }
 
 
-$FetchUsersSuccess = $PaperCutServer.RetrievePapercutUsers()
+$FetchUsersSuccess = $PaperCutServerConnection.RetrievePapercutUsers()
 
 if($true -eq $FetchUsersSuccess){
     echo "Feching users from PaperCut was a success"
@@ -216,22 +215,26 @@ if($true -eq $FetchUsersSuccess){
 }
 
 #Pull Master List of PaperCutUsers
-$PaperCutUsers = $PaperCutServer.GetPapercutUsers();
+$PaperCutUsers = $PaperCutServerConnection.GetPapercutUsers();
+echo "Pulled list of PaperCut Users"
 
 $ActiveDirectoryBillableUsers = @()
 $BillableUsers = @()
 
 #Filter out Billable Users
 if($ADWhiteList -ne $null){
+    echo "whitelist detected"
     #Enumerate all the Whitelisted Billable Users
     foreach($UserGroup in $ADWhiteList){
+        Echo "Whitelist Member: $UserGroup"
         $ActiveDirectoryBillableUsers += Get-ADGroupMember $UserGroup -Recursive | select name
     }
-
+    echo $ActiveDirectoryBillableUsers
     #Filtering out Users not on Whitelist
     foreach($User in $ActiveDirectoryBillableUsers){
-        if($PaperCutUsers.Contains($User)){
-            $BillableUsers += $User
+        if($PaperCutUsers -ccontains $User.name){
+            $BillableUsers += $User.name
+            Echo "Member Approved: $User"
         }
     }
     
@@ -247,15 +250,17 @@ if($ADWhiteList -ne $null){
 
 
 if($ADBlackList -ne $null){
+    echo "blacklist detected"
     #Enumerate all users not to be billed
     foreach($UserGroup in $ADBlackList){
         $ActiveDirectoryBillableUsers += Get-ADGroupMember $UserGroup -Recursive | select name
     }
-
+    echo $ActiveDirectoryBillableUsers
     #Filtering out Users on BlackList
     foreach($User in $ActiveDirectoryBillableUsers){
-        if($BillableUsers.Contains($User)){
-            $BillableUsers.Remove($User)
+        if($BillableUsers -ccontains $User.name){
+            echo "removing $user"
+            $BillableUsers.Remove($User.name)
         }
     }
 }
@@ -263,9 +268,11 @@ if($ADBlackList -ne $null){
 
 #As a precaution, remove any duplicate users that might exist
 $BillableUsers = $BillableUsers | select -uniq
+echo "Removing Duplcate Users"
 
 #Retrieve a sublist of users from PaperCut with Account Balances
-$BillingList = $PaperCutServer.RetrievePapercutBalances($BillableUsers);
+$BillingList = $PaperCutServerConnection.RetrievePapercutBalances($BillableUsers);
+echo "Pulling PaperCutBalances"
 
 #Now with the List of Whom to Bill Determine who CAN be billed.
 
@@ -281,6 +288,7 @@ $BillingTermCode
 if($BillingTermCodeReader.Read()){
     #A Term Code was returned!
     $BillingTermCode = $BillingTermCodeReader.GetString(0)
+    echo "Current Billing Term Code: $BillingTermCode"
 }else{
     #A Term Code was not returned!
     Echo "A Billing Term Code was not returned!"
@@ -289,7 +297,7 @@ if($BillingTermCodeReader.Read()){
 
 #Variable to hold the array of SFAS Users outside the Scope of the Loop.
 $SFASFinalBillingList = @()
-
+echo "Building SFAS Approved Billing List"
 foreach($User in $BillingList){
     #Fetch User NetID
     $NetID = $User.NetID
@@ -297,13 +305,15 @@ foreach($User in $BillingList){
     $Balance = $User.Balance
     #Create New Command to find SFAS User Details
     $BilledUserCMD = $OracleServer.CreateCommand()
-    $BilledUserCMD.CommandText = "SELECT syvyids_pidm, syvyids_spriden_id, stvests_code, stvests_desc FROM syvyids, sfbetrm, stvests WHERE (syvyids_pidm = sfbetrm_pidm) AND (sfbetrm_term_code = '$BillingTermCode') AND (sfbetrm_ests_code = stvests_code) AND (syvyids_netid = '$NetID')"
+    $SQLQuery = "SELECT syvyids_pidm, syvyids_spriden_id, stvests_code, stvests_desc FROM syvyids, sfbetrm, stvests WHERE (syvyids_pidm = sfbetrm_pidm) AND (sfbetrm_term_code = '$BillingTermCode') AND (sfbetrm_ests_code = stvests_code) AND (syvyids_netid = '$NetID')"
+    echo $SQLQuery
+    $BilledUserCMD.CommandText = $SQLQuery
     #Create Ready for the Query Results
     $BilledUserReader = $BilledUserCMD.ExecuteReader()
-    if($BillingTermCodeReader.Read()){
+    if($BilledUserReader.Read()){
         #A Term Code was returned!
-        $PIDM = $BilledUserReader.GetString(0)
-        $SPRIDEN_ID = $BilledUserReader.GetInt(1)
+        $PIDM = $BilledUserReader.GetInt32(0)
+        $SPRIDEN_ID = $BilledUserReader.GetString(1)
         $StatusCode = $BilledUserReader.GetString(2)
         #Test for Valid Status
         if($SFASValidStatus -ccontains $StatusCode){
@@ -318,15 +328,19 @@ foreach($User in $BillingList){
     }
 }
 
+
+echo "Adjusting PaperCut Accounts"
 $AdjustedSFASBillingList = @()
 $AdjustedBillingSum = 0
 #Billing is now calculated. Now edit each PaperCut User's Balance.
 echo "NetID,Account Balance,PIDM,SPRIDEN_ID,Status,Account Absolute" >> "PapercutBilling$SFASBatchBillingID.csv"
 
 foreach($SFASUser in $SFASFinalBillingList){
-    if($PaperCutServer.AdjustUserBalance($SFASUser.NetID,$SFASUser.Balance,"Billing ID: $SFASBatchBillingID") -eq $TRUE){
+    $BalanceAdjustment = $SFASUser.Balance * -1
+    if($PaperCutServerConnection.AdjustUserBalance($SFASUser.NetID,$BalanceAdjustment,"Billing ID: $SFASBatchBillingID") -eq $TRUE){
         #If the User's papercut account is successfully modified, log it.
-        Echo $SFASUser.NetID","$SFASUser.Balance","$SFASUser.PIDM","$SFASUser.SPRIDEN_ID","$SFASUser.StatusCode","$SFASUser.GetAmount() >> "PapercutBilling$SFASBatchBillingID.csv"
+        $PaperCutTuple = [string]::Concat($SFASUser.NetID,",",$SFASUser.Balance,",",$SFASUser.PIDM,",",$SFASUser.SPRIDEN_ID,",",$SFASUser.StatusCode,",",$SFASUser.GetAmount())
+        Echo $PaperCutTuple >> "PapercutBilling$SFASBatchBillingID.csv"
         $AdjustedSFASBillingList += $SFASUser
         #The Billing Sum is calculated now since the Header Record of the file has to contain the overall billing amount.
         $AdjustedBillingSum = $AdjustedBillingSum + $SFASUser.GetAmount()
@@ -334,11 +348,16 @@ foreach($SFASUser in $SFASFinalBillingList){
         Echo $SFASUser.NetID" has not had their balance adjusted."
     }
 }
+
+echo "Generating Billing File for SFAS Server"
 #Create the Header Record for the Billing Submision
-Echo SFASBilling.SFASUser.GetBatchHeaderRecord($SFASBatchUserID, $SFASBatchBillingID, $AdjustedBillingSum) >>  ($SFASBatchFilePrefix)($SFASBatchBillingID)".dat"
+$FileName = [string]::Concat($SFASBatchFilePrefix,$SFASBatchBillingID,".dat")
+$Header = [SFASBilling.SFASUser]::GetBatchHeaderRecord($SFASBatchUserID, $SFASBatchBillingID, $AdjustedBillingSum)
+Echo $Header >> $FileName
 #This loop creates each detail record per user
 foreach($AdjustedUser in $AdjustedSFASBillingList){
-    Echo $AdjustedUser.GetBatchDetailRecord($SFASBatchUserID, $SFASBatchBillingID, $SFASBatchDetailCode, $BillingTermCode)  >>  ($SFASBatchFilePrefix)($SFASBatchBillingID)".dat"
+    $Detail = $AdjustedUser.GetBatchDetailRecord($SFASBatchUserID, $SFASBatchBillingID, $SFASBatchDetailCode, $BillingTermCode)
+    Echo $Detail >> $FileName
 }
 
 

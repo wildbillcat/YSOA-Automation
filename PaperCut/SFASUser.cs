@@ -20,15 +20,15 @@ namespace SFASBilling
             Balance = balance;
             PIDM = syvyids_pidm;
             SPRIDEN_ID = syvyids_spriden_id;
-            if (SPRIDEN_ID.Length != 8)
+            if (SPRIDEN_ID.Length != 9)
             {
-                if (SPRIDEN_ID.Length > 8)
+                if (SPRIDEN_ID.Length > 9)
                 {
-                    SPRIDEN_ID = SPRIDEN_ID.Substring(SPRIDEN_ID.Length - 8);
+                    SPRIDEN_ID = SPRIDEN_ID.Substring(SPRIDEN_ID.Length - 9);
                 }
                 else
                 {
-                    SPRIDEN_ID = SPRIDEN_ID.PadLeft(8, '0');
+                    SPRIDEN_ID = SPRIDEN_ID.PadLeft(9, '0');
                 }
             }
             StatusCode = stvests_code;
