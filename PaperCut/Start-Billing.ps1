@@ -93,39 +93,6 @@ param (
     [string] 
     $WinSCPPath,
 
-    #SMTP E-mail Variables
-    [Parameter(Mandatory=$TRUE, Position=19, HelpMessage="Enter the URL for the Local SMTP Server")] 
-    [string] 
-    $SMTPServer,
-
-    [Parameter(Mandatory=$TRUE, Position=20, HelpMessage="Enter the SMTP Port for the SMTP Server")] 
-    [string] 
-    $SMTPPort,
-
-    [Parameter(Mandatory=$TRUE, Position=21, HelpMessage="Enter whether SSL is enabled on the SMTP Server")] 
-    [string] 
-    $SSLEnabled,
-
-    [Parameter(Mandatory=$FALSE, Position=22, HelpMessage="Enter the User ID for the SMTP Server")] 
-    [string] 
-    $SMTPUser,
-
-    [Parameter(Mandatory=$FALSE, Position=23, HelpMessage="Enter the password for the previous User ID")] 
-    [string] 
-    $SMTPPassword,
-
-    [Parameter(Mandatory=$TRUE, Position=24, HelpMessage="Enter the email address the e-mail should appear from")] 
-    [string] 
-    $EmailFrom,
-
-    [Parameter(Mandatory=$TRUE, Position=25, HelpMessage="Enter the email address to send the summary to")] 
-    [string] 
-    $EmailTo,
-
-    [Parameter(Mandatory=$TRUE, Position=26, HelpMessage="Enable or Disable the e-mail summary of Billing")] 
-    [string] 
-    $SendBillingSummary,
-
     #Active Directory Parameters
     [Parameter(Mandatory=$False, Position=27, HelpMessage="Enable or Disable the e-mail summary of Billing")] 
     [string[]] 
@@ -141,26 +108,61 @@ param (
     [string[]] 
     $SFASValidStatus,
 
-    [Parameter(Mandatory=$False, Position=30, HelpMessage="This is the path to Oracle.ManagedDataAccess.dll of the ODP.NET package installed")] 
+    [Parameter(Mandatory=$True, Position=30, HelpMessage="This is the path to Oracle.ManagedDataAccess.dll of the ODP.NET package installed")] 
     [string[]] 
-    $OracleManagedDataAssemblyPath
+    $OracleManagedDataAssemblyPath,
 
-
+    #Billing Configuration Variables  
+    [Parameter(Mandatory=$TRUE, Position=0, HelpMessage="Enter the path where filling files should be stored locally, ie C:\billing\")] 
+    [string] 
+    $BillingRecordPath
 )
 
 #Validate Batch Information
 $SFASBatchUserID = $SFASBatchUserID.PadRight(8," ")
-if($SFASBatchDetailCode.Length -ne 8){
+if($SFASBatchUserID.Length -ne 8){
     echo "Invalid Batch User ID (Should be less than 9 Characters)"
 }
 $SFASBatchBillingID = $SFASBatchBillingID.PadLeft(5,"0")
 if($SFASBatchBillingID.Length -ne 5){
     echo "Invalid Batch Detail Code (Should be less than 6 Characters)"
 }
+
+$pat = "^[a-zA-Z0-9\s]+$"
+ 
+if($SFASBatchBillingID -match $pat){
+    echo "Valid Billing ID"
+}else{
+    echo "Invalid Billing ID"
+    break
+}
+
 if($SFASBatchDetailCode.Length -ne 4){
     echo "Invalid Batch Detail Code (Should be 4 Characters)"
 }
 #Test to make sure Billing ID is valid:$SFASBatchBillingID
+
+if((Test-Path -Path WinSCPnet.dll) -eq $False){
+    Echo "WinSCPnet.dll is missing."
+    Echo "http://winscp.net"
+    break
+}
+
+if((Test-Path -Path WinSCP.exe) -eq $False){
+    Echo "WinSCP.exe is missing."
+    Echo "http://winscp.net"
+    break
+}
+
+if((Test-Path -Path WinSCP.com) -eq $False){
+    Echo "WinSCP.com is missing."
+    Echo "http://winscp.net"
+    break
+}
+
+#Load FTP Assembly
+$WinSCPAssemlyPath = Resolve-Path -Path WinSCPnet.dll
+[Reflection.Assembly]::LoadFile($WinSCPAssemlyPath)
 
 #Load the XML RPC Library 
 $RPCAssemblyPath = Resolve-Path -Path CookComputing.XmlRpcV2.dll
@@ -177,6 +179,23 @@ $SFASUserAssemblyPath = Resolve-Path -Path SFASUser.dll
 #Load the Oracle Managed Data Access
 $PaperCutAssemblyPath = Resolve-Path -Path $OracleManagedDataAssemblyPath
 [Reflection.Assembly]::LoadFile($OracleManagedDataAssemblyPath)
+
+#Test to see if this billing ID has been used
+$PaperCutRecordPath = [string]::Concat($BillingRecordPath,'\PapercutBilling',$SFASBatchBillingID,".csv")
+$SFASRecordPath = [string]::Concat($BillingRecordPath,'\',$SFASBatchFilePrefix,$SFASBatchBillingID,".dat")
+
+
+if((Test-Path -Path $SFASRecordPath) -eq $True){
+    Echo "Billing Can't be run! It seems this billing was already run."
+    break
+}
+
+if((Test-Path -Path $PaperCutRecordPath) -eq $True){
+    Echo "Billing Can't be run! It seems this billing was already started."
+    break
+}
+
+
 
 #Create a Papercut Server Interface
 $PaperCutServerConnection = New-Object PaperCutRPC.PaperCutServer($PaperCutServer, $PaperCutAPIKey, $PaperCutPort)
@@ -333,14 +352,14 @@ echo "Adjusting PaperCut Accounts"
 $AdjustedSFASBillingList = @()
 $AdjustedBillingSum = 0
 #Billing is now calculated. Now edit each PaperCut User's Balance.
-echo "NetID,Account Balance,PIDM,SPRIDEN_ID,Status,Account Absolute" >> "PapercutBilling$SFASBatchBillingID.csv"
+echo "NetID,Account Balance,PIDM,SPRIDEN_ID,Status,Account Absolute" >> $PaperCutRecordPath
 
 foreach($SFASUser in $SFASFinalBillingList){
     $BalanceAdjustment = $SFASUser.Balance * -1
     if($PaperCutServerConnection.AdjustUserBalance($SFASUser.NetID,$BalanceAdjustment,"Billing ID: $SFASBatchBillingID") -eq $TRUE){
         #If the User's papercut account is successfully modified, log it.
         $PaperCutTuple = [string]::Concat($SFASUser.NetID,",",$SFASUser.Balance,",",$SFASUser.PIDM,",",$SFASUser.SPRIDEN_ID,",",$SFASUser.StatusCode,",",$SFASUser.GetAmount())
-        Echo $PaperCutTuple >> "PapercutBilling$SFASBatchBillingID.csv"
+        Echo $PaperCutTuple >> $PaperCutRecordPath
         $AdjustedSFASBillingList += $SFASUser
         #The Billing Sum is calculated now since the Header Record of the file has to contain the overall billing amount.
         $AdjustedBillingSum = $AdjustedBillingSum + $SFASUser.GetAmount()
@@ -351,13 +370,49 @@ foreach($SFASUser in $SFASFinalBillingList){
 
 echo "Generating Billing File for SFAS Server"
 #Create the Header Record for the Billing Submision
-$FileName = [string]::Concat($SFASBatchFilePrefix,$SFASBatchBillingID,".dat")
 $Header = [SFASBilling.SFASUser]::GetBatchHeaderRecord($SFASBatchUserID, $SFASBatchBillingID, $AdjustedBillingSum)
-Echo $Header >> $FileName
+Echo $Header >> $SFASRecordPath
 #This loop creates each detail record per user
 foreach($AdjustedUser in $AdjustedSFASBillingList){
     $Detail = $AdjustedUser.GetBatchDetailRecord($SFASBatchUserID, $SFASBatchBillingID, $SFASBatchDetailCode, $BillingTermCode)
-    Echo $Detail >> $FileName
+    Echo $Detail >> $SFASRecordPath
 }
 
 
+# Setup session options
+    $sessionOptions = New-Object WinSCP.SessionOptions
+    $sessionOptions.Protocol = [WinSCP.Protocol]::Sftp
+    $sessionOptions.HostName = $SFTPServerPath
+    $sessionOptions.UserName = $SFTPUser
+    $sessionOptions.Password = $SFTPPassword
+    $sessionOptions.SshHostKeyFingerprint = $SSHHostKeyFingerprint
+    $sessionOptions.SshPrivateKeyPath = $SFTPKeyPath
+ 
+    $session = New-Object WinSCP.Session
+    $session.ExecutablePath = $WinSCPPath
+
+    try
+    {
+        # Connect
+        $session.Open($sessionOptions)
+ 
+        # Upload files
+        $transferOptions = New-Object WinSCP.TransferOptions
+        $transferOptions.TransferMode = [WinSCP.TransferMode]::Binary
+ 
+        $transferResult = $session.PutFiles($SFASRecordPath, $RemoteDirectory, $False, $transferOptions)
+ 
+        # Throw on any error
+        $transferResult.Check()
+ 
+        # Print results
+        foreach ($transfer in $transferResult.Transfers)
+        {
+            Write-Host ("Upload of {0} succeeded" -f $transfer.FileName)
+        }
+    }
+    finally
+    {
+        # Disconnect, clean up
+        $session.Dispose()
+    }
