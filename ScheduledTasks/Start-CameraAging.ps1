@@ -15,18 +15,6 @@ Param(
     [int]$Days
 )
 
-$ScriptBlock = {
-        $Disks = Invoke-Command -ComputerName "arch-pc-$using:i" { Get-WmiObject -Class Win32_LogicalDisk | where {$_.DriveType -eq 3} |select DriveType,DeviceID,Size }
-        if( $Disks.Count -eq 1 ){
-            Add-Content D:\Missing.txt "`nArch-PC-$using:i"
-        }elseif ($Disks -eq $null){
-            Add-Content D:\Offline.txt "`nArch-PC-$using:i"
-        }else{
-            Add-Content D:\Online.txt "`nArch-PC-$using:i"
-        }
-    }
-
-
 Set-Location -Path $RootFolder
 
 $Folders = Get-ChildItem -Directory
