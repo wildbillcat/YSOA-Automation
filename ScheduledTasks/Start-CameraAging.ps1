@@ -37,7 +37,7 @@ ForEach($Folder in $Folders){
         
         #Remove the Oldest Folder Acceptable
         $OldestFolderPath = [string]::Concat($using:Days,"dayold")
-        Remove-Item -Path $OldestFolderPath
+        Remove-Item -Path $OldestFolderPath -Recurse -Force
 
         #Migrate Folders
          for($i = $using:Days; $i -gt 1; $i--){
@@ -54,7 +54,7 @@ ForEach($Folder in $Folders){
         #Create the Last Folder (Day 1)
         $Day1Directory = "1dayold"
         New-Item -ItemType directory -Path $Day1Directory #Find a way to filter everything to within 24hours?
-        $NewFiles = Get-ChildItem -File  | Where-Object { $_.LastWriteTime -le [DateTime] (get-date).AddDays(-1) }
+        $NewFiles = Get-ChildItem -File  | Where-Object { $_.LastWriteTime -le [DateTime] (Get-Date -Hour 0 -Minute 0 -Second 0) }
         Foreach($File in $NewFiles){
             Move-Item -Path $File -Destination $Day1Directory
             #Copy File to $Day1 Day1 Directory
