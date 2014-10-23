@@ -18,7 +18,7 @@ Param(
 Set-Location -Path $RootFolder
 
 $Folders = Get-ChildItem -Directory
-
+$Jobs = @()
 ForEach($Folder in $Folders){
 #Create a Job for each specific Folder
     $ScriptBlock = {
@@ -61,6 +61,7 @@ ForEach($Folder in $Folders){
         }
         #End Creation of Day 1 Folder
     }
-
-    Start-Job -ScriptBlock $ScriptBlock   
+    $Jobs += Start-Job -ScriptBlock $ScriptBlock   
 }
+
+Wait-Job -Job $Jobs
