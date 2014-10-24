@@ -12,13 +12,16 @@ Param(
     [Parameter(Mandatory=$true)]
     [string]$RootFolder,
     [Parameter(Mandatory=$true)]
-    [int]$Days
+    [int]$Days,
+    [Parameter(Mandatory=$false)]
+    [int]$MaxJobs = 4
 )
 
 Set-Location -Path $RootFolder
 
 $Folders = Get-ChildItem -Directory
 $Jobs = @()
+$i = 0
 ForEach($Folder in $Folders){
 #Create a Job for each specific Folder
     $ScriptBlock = {
@@ -61,7 +64,18 @@ ForEach($Folder in $Folders){
         }
         #End Creation of Day 1 Folder
     }
-    $Jobs += Start-Job -ScriptBlock $ScriptBlock   
+    $Jobs += Start-Job -ScriptBlock $ScriptBlock
+    
+    #This section used to throttle system resources   
+    $i++
+    #Max concurrent job counter:
+    if($i -ge $MaxJobs){
+        #Wait for current number of jobs to Complete
+        Wait-Job -Job $Jobs
+        #ResetJobs Counter and List
+        $Jobs = @()
+        $i = 0
+    }
 }
 
 Wait-Job -Job $Jobs
