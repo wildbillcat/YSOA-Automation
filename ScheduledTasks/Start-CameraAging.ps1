@@ -4,7 +4,7 @@ This deletes, renames, and moves camera image files
 .DESCRIPTION
 This is a script that deletes the "Aged Out" Files, Renames Folders to Age out files, and the Moves new files to the new folder.
 .EXAMPLE
-Start-CameraAging.ps1 -RootFolder "h:\ftp" -Days 6
+Start-CameraAging.ps1 -RootFolder "h:\ftp" -Days 6 -AdministratorEmails patrick@website.com,admin@website.com
 .LINK
 mailto:patrick.mcmorran@yale.edu
 #>
@@ -14,7 +14,11 @@ Param(
     [Parameter(Mandatory=$true)]
     [int]$Days,
     [Parameter(Mandatory=$false)]
-    [int]$MaxJobs = 4
+    [int]$MaxJobs = 4,
+    [Parameter(Mandatory=$true)]
+    [string[]]$AdministratorEmails,
+    [Parameter(Mandatory=$true)]
+    [string]$SMTPServer
 )
 
 Set-Location -Path $RootFolder
@@ -63,6 +67,12 @@ ForEach($Folder in $Folders){
             #Copy File to $Day1 Day1 Directory
         }
         #End Creation of Day 1 Folder
+        #Send Warning E-mail if photos are missing:
+        if(($NewFiles -eq $null) -or ($NewFiles.Length -eq 0)){
+            $Subject = "Warning, Cameral Folder $using:Folder is missing new pictures"
+            $From = [string]::Concat("PowershellCameraScript@",$env:COMPUTERNAME,".",$env:USERDNSDOMAIN)
+            Send-MailMessage -To $AdministratorEmails -Subject $Subject -SmtpServer $SMTPServer -From $From
+        }
     }
     $Jobs += Start-Job -ScriptBlock $ScriptBlock
     
