@@ -4,7 +4,7 @@ This deletes, renames, and moves camera image files
 .DESCRIPTION
 This is a script that deletes the "Aged Out" Files, Renames Folders to Age out files, and the Moves new files to the new folder.
 .EXAMPLE
-Start-CameraAging.ps1 -RootFolder "h:\ftp" -Days 6 -AdministratorEmails patrick@website.com,admin@website.com
+Start-CameraAging.ps1 -RootFolder "h:\ftp" -Days 6 -AdministratorEmails patrick@website.com,admin@website.com -SMTPServer mail.server.com
 .LINK
 mailto:patrick.mcmorran@yale.edu
 #>
