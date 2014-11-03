@@ -371,13 +371,12 @@ foreach($SFASUser in $SFASFinalBillingList){
 echo "Generating Billing File for SFAS Server"
 #Create the Header Record for the Billing Submision
 $Header = [SFASBilling.SFASUser]::GetBatchHeaderRecord($SFASBatchUserID, $SFASBatchBillingID, $AdjustedBillingSum)
-Echo $Header >> $SFASRecordPath
+Echo $Header | Out-File -Append -Encoding ascii -FilePath $SFASRecordPath
 #This loop creates each detail record per user
 foreach($AdjustedUser in $AdjustedSFASBillingList){
     $Detail = $AdjustedUser.GetBatchDetailRecord($SFASBatchUserID, $SFASBatchBillingID, $SFASBatchDetailCode, $BillingTermCode)
-    Echo $Detail >> $SFASRecordPath
+    Echo $Detail | Out-File -Append -Encoding ascii -FilePath $SFASRecordPath
 }
-
 
 # Setup session options
     $sessionOptions = New-Object WinSCP.SessionOptions
