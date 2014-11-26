@@ -1,31 +1,35 @@
 ﻿param ( 
-    [Parameter(Mandatory=$false, Position=0, HelpMessage="Enter the URL for the Proteus Server, ie proteus.website.com")] 
+    [Parameter(Mandatory=$true, Position=0, HelpMessage="Enter the URL for the Proteus Server, ie proteus.website.com")] 
     [string] 
     $ProteusAPIURL,
 
-    [Parameter(Mandatory=$false, Position=0, HelpMessage="Enter")] 
+    [Parameter(Mandatory=$true, Position=1, HelpMessage="Enter the API UserName for the Proteus Server")] 
     [string] 
     $ProteususerName,
 
-    [Parameter(Mandatory=$false, Position=0, HelpMessage="Enter ")] 
+    [Parameter(Mandatory=$true, Position=2, HelpMessage="Enter the API User Password for the Proteus Server ")] 
     [string] 
     $ProteusPassword,
 
-    [Parameter(Mandatory=$false, Position=0, HelpMessage="Enter ")] 
+    [Parameter(Mandatory=$true, Position=3, HelpMessage="Enter the MAC address to add")] 
     [string] 
     $MacAddress,
 
-    [Parameter(Mandatory=$false, Position=0, HelpMessage="Enter ")] 
+    [Parameter(Mandatory=$true, Position=4, HelpMessage="Enter the Description of the MAC Address")] 
     [string] 
     $Description,
 
-    [Parameter(Mandatory=$false, Position=0, HelpMessage="Enter ")] 
+    [Parameter(Mandatory=$true, Position=5, HelpMessage="Enter the administrative phone number for the MAC Address")] 
     [string] 
     $Phone,
 
-    [Parameter(Mandatory=$false, Position=0, HelpMessage="Enter ")] 
+    [Parameter(Mandatory=$true, Position=6, HelpMessage="Enter the physical buidling the MAC is located in")] 
     [string] 
-    $Location
+    $Location,
+
+    [Parameter(Mandatory=$true, Position=7, HelpMessage="Enter the URL for the Proteus Server, ie proteus.website.com")] 
+    [string] 
+    $ProteusNetwork
     )
 
     $ProteusAPIPath = Resolve-Path -Path ProteusAPI.dll
@@ -38,12 +42,15 @@
     # login
     $Proteus.login($ProteususerName, $ProteusPassword)
     #Grab network configuration
-    $ProteusConfiguration = $Proteus.getEntityByName(0, "Yale Network", "Configuration")
+    $ProteusConfiguration = $Proteus.getEntityByName(0, $ProteusNetwork, "Configuration")
     $ProteusConfiguration
 
-    $ProteusMacAddressObject = $Proteus.getMACAddress($ProteusConfiguration.id, $MacAddress)
-    
-
+    try{
+        $ProteusMacAddressObject = $Proteus.getMACAddress($ProteusConfiguration.id, $MacAddress)
+    }catch{
+        "Invalid Mac Address or detail"
+        break
+    }
 
     if($ProteusMacAddressObject.id -eq 0){
     "Mac Doesnt exist in proteus, must create!"
@@ -53,6 +60,9 @@
     break
     }
 
-    $CurrentUser = Get-WMIObject -class Win32_ComputerSystem | select username
+    $CurrentUser = (Get-WMIObject -class Win32_ComputerSystem).username
     $MacAddressDetails = "description=$Description|phone=$Phone|location=$Location|reg_by=$CurrentUser|"
+    
+   
     $Proteus.addMACAddress($ProteusConfiguration.id, $MacAddress, $MacAddressDetails)
+    
