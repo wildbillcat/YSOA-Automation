@@ -33,6 +33,16 @@ Configuration ReleaseStationClients
    # This Configuration block contains a configuration for the 4th Floor Plotting Pit
    Node $MachineName 
    {
+      Registry DisableUAC
+        {
+            Ensure = "Present"  # You can also set Ensure to "Absent"
+            Key = "HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\policies\system"
+            ValueName = "EnableLUA"
+            ValueType = "DWord"
+            ValueData = "0"
+            Force = $true
+        }
+
       User AddReleaseStationUser #Adds the Signage User that will AutoLogin with the GPO
         {
             UserName = $UserName
@@ -147,7 +157,7 @@ Configuration ReleaseStationClients
         }
         TestScript = { $false }
         GetScript = { <# This must return a hash table #> }
-        DependsOn = @('[Script]GPUpdateComputer', '[File]KillExplorerBatchFile', '[File]PaperCutConfigurationFile', '[File]ReleaseStationShortcut', '[File]ReleaseStationShortcut', '[File]DisableAltTab', '[File]PaperCutConnectionConfigurationFile', '[Script]ForceSignageUserLogOut', '[User]AddReleaseStationUser') #Ensure everything is complete before restarting          
+        DependsOn = @('[Script]GPUpdateComputer', '[File]KillExplorerBatchFile', '[File]PaperCutConfigurationFile', '[File]ReleaseStationShortcut', '[File]ReleaseStationShortcut', '[File]DisableAltTab', '[File]PaperCutConnectionConfigurationFile', '[Script]ForceSignageUserLogOut', '[User]AddReleaseStationUser', '[Registry]DisableUAC') #Ensure everything is complete before restarting          
         }
                 
    }
