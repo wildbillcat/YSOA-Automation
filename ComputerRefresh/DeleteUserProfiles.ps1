@@ -15,6 +15,5 @@ ForEach($Folder in $Folders){
     if(-Not (($Folder.Name -eq "vcg5") -or ($Folder.Name -eq "pem4") -or $Folder.Name -eq "Public")){
         "Delete Folder: $Folder"
         $Folder | Remove-Item -Force -Recurse
-    }
-    
+    }    
 }
