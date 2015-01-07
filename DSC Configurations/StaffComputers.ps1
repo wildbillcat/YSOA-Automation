@@ -27,23 +27,17 @@ Configuration StaffComputers
 
    Node $MachineName 
    {
-      User AddSignageUser #Adds the Signage User that will AutoLogin with the GPO
+      User RemoveAdmin #Adds the Signage User that will AutoLogin with the GPO
       {
-        UserName = $UserName
-        Password = New-Object System.Management.Automation.PSCredential ($UserName, $Password)
-        Ensure = "Present"
-        PasswordChangeNotAllowed = $true
-        PasswordChangeRequired = $false
-        PasswordNeverExpires = $true
+        UserName = "Admin"
+        Ensure = "Absent"
       }
-      #Adobe Flash Player
-      Package AdobeFlash
+      #Oracle Java 32 Bit
+      Package Java7u45
       {
         Ensure = "Present"  # You can also set Ensure to "Absent"
-        Path  = "$ResourceShare\install_flash_player_14_active_x.msi"
-        Name = "Adobe Flash Player 14 ActiveX"
-        ProductId = "15AE611F-5A40-4BD0-9291-1C6856BDB9A4"
-        DependsOn = "[User]AddSignageUser"
+        Path  = "$ResourceShare\jre-7u45-windows-i586.exe"
+        Name = "Java 7 Update 45"
       }
       #Xibo Client Package
       Package XiboClient
@@ -54,33 +48,7 @@ Configuration StaffComputers
         ProductId = "8A4B377C-D3D9-41A8-A6C5-E5CA9F8B404E"
         DependsOn = "[Package]AdobeFlash"
       } 
-      # This Copys the Config File over to the Machine
-      File XiboConfigurationFile
-      {
-         Checksum = "SHA-1" #Ensure Config File is Latest Revision
-         Ensure = "Present"  # Ensure Config File Exists"
-         SourcePath = "$ResourceShare\$MachineName.config" # This is a path of the Updated Config File
-         DestinationPath = "C:\Program Files (x86)\Xibo Player\XiboClient.exe.config" # The path where the config file should be installed
-         DependsOn = "[Package]XiboClient"
-      }
-      # This Copys the Config File over to the Machine
-      File XiboUserConfigurationFile
-      {
-         Checksum = "SHA-1" #Ensure Config File is Latest Revision
-         Ensure = "Present"  # Ensure Config File Exists"
-         SourcePath = "$ResourceShare\$MachineName.user.config" # This is a path of the Updated Config File
-         DestinationPath = "C:\Users\signage\AppData\Local\Xibo\XiboClient.exe_Url_zclrehyrcix2bbdpnuvq15j31b1kejhn\2.0.0.0\user.config" # The path where the user config file should be installed
-         DependsOn = "[Package]XiboClient"
-      }
-        #This runs a GPUpdate to pull down the latest Group Policy configuration
-      Script GPUpdateComputer
-        {
-        SetScript = {         
-        gpupdate /force
-        }
-        TestScript = { $false }
-        GetScript = { <# This must return a hash table #> }          
-     }
+      
    }
 }
 
