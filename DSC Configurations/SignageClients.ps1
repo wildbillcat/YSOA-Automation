@@ -9,11 +9,14 @@
    restarting, then run again to install Xibo and configure it.
 .EXAMPLE
    .\SignageClients.ps1 -MachineName ARCH-SIGNAGE-03 -Configuration ARCH-SIGNAGE-03
-   Start-DscConfiguration .\ReleaseStationsClients -ComputerName ARCH-SIGNAGE-03 -Verbose -Wait
+   Start-DscConfiguration .\SignageClients -ComputerName ARCH-SIGNAGE-03 -Verbose -Wait
    Invoke-Command -ComputerName ARCH-SIGNAGE-03 {shutdown -t 0 -r}
-   Start-DscConfiguration .\ReleaseStationsClients -ComputerName ARCH-SIGNAGE-03 -Verbose -Wait
+   Start-DscConfiguration .\SignageClients -ComputerName ARCH-SIGNAGE-03 -Verbose -Wait
 .LINK
     mailto:patrick.mcmorran@yale.edu
+.DEVEL
+    For getting an installed program's guid (for xibo client) you can use the following powershell command:
+    Get-WmiObject -Class Win32_Product
 #>
 
 param(
@@ -50,14 +53,24 @@ Configuration SignageClients
         ProductId = "15AE611F-5A40-4BD0-9291-1C6856BDB9A4"
         DependsOn = "[User]AddSignageUser"
       }
+      #Force Signage User Logout
+      Script ForceSignageUserLogOut
+        {
+        SetScript = {         
+            logoff 1
+        }
+        TestScript = { $false }
+        GetScript = { <# This must return a hash table #> }
+        DependsOn = "[Package]AdobeFlash" #Ensure the Signage user has been made, so that the command can be run          
+     }
       #Xibo Client Package
       Package XiboClient
       {
         Ensure = "Present"  # You can also set Ensure to "Absent"
-        Path  = "$ResourceShare\xibo-client-1.6.3-win32-x86.msi"
+        Path  = "$ResourceShare\xibo-client-1.6.4-win32-x86.msi"
         Name = "Xibo Player"
-        ProductId = "8A4B377C-D3D9-41A8-A6C5-E5CA9F8B404E"
-        DependsOn = "[Package]AdobeFlash"
+        ProductId = "67C8DFA6-60E7-4FAE-AF53-286B6A337F1B"
+        DependsOn = "[Script]ForceSignageUserLogOut"
       } 
       # This Copys the Config File over to the Machine
       File XiboConfigurationFile
