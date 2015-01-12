@@ -2,10 +2,10 @@
 #REQUIRES -Module ActiveDirectory
 <#  
 .Synopsis  
-    This is a general template that uses two lists to then perform actions. 
+    This script reads from a text file (UnlockedComputers.txt) a list of all numbers that have been unlocked by registration and modifies the Active Directory. 
      
 .Description  
-    Whipped this up for Rob to compare two student lists and perform actions on them.
+    Whipped this up to automate locking/unlocking computers quickly. Fill a text file with a list of the PC numbers separated by linebreaks.
    
 .Notes  
     Name     : ActionFilterScript.ps1  
