@@ -5,11 +5,12 @@
     This script reads from a text file (UnlockedComputers.txt) a list of all numbers that have been unlocked by registration and modifies the Active Directory. 
      
 .Description  
-    Whipped this up to automate locking/unlocking computers quickly. Fill a text file with a list of the PC numbers separated by linebreaks.
-   
-.Notes  
-    Name     : ActionFilterScript.ps1  
-     
+    Whipped this up to automate locking/unlocking computers quickly. Fill a text file with a list of the PC numbers separated by linebreaks. Run with the Mode 
+    "SET" parameter in order to make the changes.
+.EXAMPLE
+    .\LockUnregisteredComputers.ps1 -Mode "SET"
+.LINK
+    mailto:patrick.mcmorran@yale.edu
 #>
 
 param(
