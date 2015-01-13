@@ -4,7 +4,7 @@
 .DESCRIPTION
    This is a script that runs all of the stated configurations to create mof files in a batch to save on typing each command.
 .EXAMPLE
-   .\Generate-SignageClientsClients.ps1
+   .\Generate-SignageClients.ps1
    Start-DscConfiguration .\SignageClients -Verbose -Wait
 .LINK
     mailto:patrick.mcmorran@yale.edu

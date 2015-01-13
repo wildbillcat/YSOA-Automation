@@ -13,7 +13,7 @@
    Invoke-Command -ComputerName ARCH-SIGNAGE-03 {shutdown -t 0 -r}
    Start-DscConfiguration .\SignageClients -ComputerName ARCH-SIGNAGE-03 -Verbose -Wait
 .LINK
-    mailto:patrick.mcmorran@yale.edu
+    mailto:kingrolloinc@sbcglobal.net
 .DEVEL
     For getting an installed program's guid (for xibo client) you can use the following powershell command:
     Get-WmiObject -Class Win32_Product

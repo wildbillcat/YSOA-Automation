@@ -10,7 +10,7 @@
 .EXAMPLE
     .\LockUnregisteredComputers.ps1 -Mode "SET"
 .LINK
-    mailto:patrick.mcmorran@yale.edu
+    mailto:kingrolloinc@sbcglobal.net
 #>
 
 param(

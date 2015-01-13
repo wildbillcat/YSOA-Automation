@@ -7,7 +7,7 @@
 .EXAMPLE
    FetchDisksOfComputerRange.ps1
 .LINK
-    mailto:patrick.mcmorran@yale.edu
+    mailto:kingrolloinc@sbcglobal.net
 #>
 for($i = 900; $i -le 999; $i++){
     Echo "Arch-PC-$i"

@@ -6,7 +6,7 @@ This is a script that deletes the "Aged Out" Files, Renames Folders to Age out f
 .EXAMPLE
 Start-CameraAging.ps1 -RootFolder "h:\ftp" -Days 6 -AdministratorEmails patrick@website.com,admin@website.com -SMTPServer mail.server.com
 .LINK
-mailto:patrick.mcmorran@yale.edu
+mailto:kingrolloinc@sbcglobal.net
 #>
 Param(
     [Parameter(Mandatory=$true)]

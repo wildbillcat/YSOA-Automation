@@ -6,7 +6,7 @@
 .EXAMPLE
    Get-ComputerOU.ps1 -ComputerName PC1,PC2,PC3 
 .LINK
-    mailto:patrick.mcmorran@yale.edu
+    mailto:kingrolloinc@sbcglobal.net
 #>
 Param(
     [Parameter(Mandatory=$true)]

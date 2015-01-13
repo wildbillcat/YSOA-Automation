@@ -10,7 +10,7 @@
    Invoke-Command -ComputerName ARCH-SIGNAGE-03 {shutdown -t 0 -r}
    Start-DscConfiguration .\ReleaseStationsClients -ComputerName ARCH-SIGNAGE-03 -Verbose -Wait
 .LINK
-    mailto:patrick.mcmorran@yale.edu
+    mailto:kingrolloinc@sbcglobal.net
 #>
 
 param(

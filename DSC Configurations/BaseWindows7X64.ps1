@@ -11,7 +11,7 @@
    .\ReleaseStationClients.ps1 -MachineName Arch-PC-623 -Configuration PlottingPit6
    Start-DscConfiguration .\ReleaseStationsClients -ComputerName Arch-PC-623 -Verbose -Wait
 .LINK
-    mailto:patrick.mcmorran@yale.edu
+    mailto:kingrolloinc@sbcglobal.net
 #>
 
 param(

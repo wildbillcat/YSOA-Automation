@@ -7,7 +7,7 @@
 .EXAMPLE
     MoveComputersAndUpdateAD.ps1 -ComputerName ((Get-Content .\PCsInQuestion.txt)) -DestinationOU "OU=SOA 6th Floor Studio Workstations,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
 .LINK
-    mailto:patrick.mcmorran@yale.edu
+    mailto:kingrolloinc@sbcglobal.net
 #>
 Param(
     [Parameter(Mandatory=$true)]

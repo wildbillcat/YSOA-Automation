@@ -9,7 +9,7 @@
    .\LaserCutterComputers.ps1 -MachineName ARCH-PC-303
    Start-DscConfiguration .\LaserCutterComputers -ComputerName ARCH-PC-303 -Verbose -Wait
 .LINK
-    mailto:patrick.mcmorran@yale.edu
+    mailto:kingrolloinc@sbcglobal.net
 #>
 
 param(

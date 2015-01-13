@@ -7,7 +7,7 @@
 .EXAMPLE
    Set-ComputerOU.ps1 -ComputerName PC1,PC2,PC3 -OUPath "OU=6th Floor Lab,OU=Teaching Labs,OU=Lab Computers,OU=Architecture,DC=yu,DC=yale,DC=edu"
 .LINK
-    mailto:patrick.mcmorran@yale.edu
+    mailto:kingrolloinc@sbcglobal.net
 #>
 Param(
     [Parameter(Mandatory=$true)]

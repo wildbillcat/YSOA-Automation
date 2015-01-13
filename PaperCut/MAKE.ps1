@@ -8,7 +8,7 @@
 .EXAMPLE
    
 .LINK
-    mailto:patrick.mcmorran@yale.edu
+    mailto:kingrolloinc@sbcglobal.net
 #>
 
 #First, test for all the resources and compile the C# code that was going to be used by this script.

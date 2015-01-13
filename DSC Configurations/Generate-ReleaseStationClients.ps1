@@ -7,7 +7,7 @@
    .\Generate-ReleaseStationClients.ps1
    Start-DscConfiguration .\ReleaseStationClients -Verbose -Wait
 .LINK
-    mailto:patrick.mcmorran@yale.edu
+    mailto:kingrolloinc@sbcglobal.net
 #>
 if((Test-Path ReleaseStationClients) -eq $true){
     "Deleting Old Configurations"
