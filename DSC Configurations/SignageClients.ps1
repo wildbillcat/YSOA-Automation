@@ -99,6 +99,15 @@ Configuration SignageClients
         TestScript = { $false }
         GetScript = { <# This must return a hash table #> }          
      }
+      Script RestartComputer
+        {
+        SetScript = {         
+            shutdown /t 0 /r /f
+        }
+        TestScript = { $false }
+        GetScript = { <# This must return a hash table #> }
+        DependsOn = @('[Script]GPUpdateComputer', '[File]XiboUserConfigurationFile', '[File]XiboConfigurationFile', '[Package]XiboClient', '[Script]ForceSignageUserLogOut') #Ensure everything is complete before restarting          
+        }
    }
 }
 
